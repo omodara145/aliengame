@@ -1,5 +1,5 @@
 <template>
-  <div id="nav">
+  <div id="nav" class="contain">
     <GamestateStart v-if="uiState === 'start'">
       <h2>Which hooman are you?</h2>
       <p v-for="(character, i) in characters" :key="i">
@@ -8,7 +8,7 @@
       </p>
       <button @click="setCharacter">Begin</button>
     </GamestateStart>
-    <section v-else>
+    <section v-else-if="uiState === 'chosen'">
       <svg viewBox="0 -180 1628 1180" class="main">
         <defs>
           <clipPath id="bottom-clip">
@@ -32,9 +32,16 @@
           <path class="cls-20" d="M938.9 336C835.1 336 751 412.3 751 506.4s84.1 170.3 187.9 170.3a201.5 201.5 0 00100.5-26.4l87.4 26.4-29.1-79.2c18.4-26.4 29.1-57.6 29.1-91.1 0-94.1-84.1-170.4-187.9-170.4z" transform="translate(17)"/>
         </g>
       </svg>
-      <div class="friendtalk"></div>
-      <div class="zombietalk"></div>
+      <div class="friendtalk">
+        <h3>{{ questions[questionIndex].question }}</h3>
+      </div>
+      <div class="zombietalk">
+        <p v-for="(character, i) in shuffle(characters)" :key="i">
+          <button @click="nextQuestion(character)">{{ questions[questionIndex][character] }}</button>
+        </p>
+      </div>
     </section>
+    <GamestateFinish v-else />
   </div>
   <router-view/>
 </template>
@@ -50,21 +57,32 @@ import Baker from '@/components/Baker'
 import Mechanic from '@/components/Mechanic'
 import Zombie from '@/components/Zombie'
 import Artist from '@/components/Artist'
+import GamestateFinish from './components/GamestateFinish'
 
 export default {
-  components: { GamestateStart, Score, Friend, Baker, Mechanic, Artist, Zombie },
+  components: { GamestateFinish, GamestateStart, Score, Friend, Baker, Mechanic, Artist, Zombie },
   data () {
     return {
       userCharacter: ''
     }
   },
   computed: {
-    ...mapState(['uiState', 'questions', 'characters', 'character'])
+    ...mapState(['uiState', 'questions', 'characters', 'character', 'questionIndex'])
   },
   methods: {
     setCharacter () {
       this.$store.commit('setCharacter', this.userCharacter)
       this.$store.commit('updateUIState', 'chosen')
+    },
+    nextQuestion (character) {
+      this.$store.commit('nextQuestion', character)
+    },
+    shuffle (array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i - 1));
+        [array[i], array[j]] = [array[j], array[i]]
+      }
+      return array
     }
   }
 }
